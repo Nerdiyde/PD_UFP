@@ -14,7 +14,7 @@
     So far this library is mostly tested on a custom PCB containing an ESP32 and an FUSB302 PD phy.
 
     ============================================
-    
+
     MIT License
 
     Copyright (c) 2020 Ryan Ma
@@ -47,6 +47,8 @@
 #include <HardwareSerial.h>
 
 #define FUSB302_INT_STANDARD_PIN 7 // This is the standard interrupt pin. It can be changed during the init procedure
+#define SRC_CAP_RETRY_COUNTER_MAX 10
+
 
 extern "C"
 {
@@ -81,6 +83,7 @@ public:
     // Get
     uint16_t get_voltage(void) { return ready_voltage; } // Voltage in 50mV units, 20mV(PPS)
     uint16_t get_current(void) { return ready_current; } // Current in 10mA units, 50mA(PPS)
+    uint16_t get_current_pdo(void);             // Return the current set power delivery option
     // get_source_capabilities
     // Set
     bool set_PPS(uint16_t PPS_voltage, uint8_t PPS_current);
@@ -155,6 +158,7 @@ public:
     void print_status(HardwareSerial &serial);
     // Get
     int status_log_readline(char *buffer, int maxlen);
+    void print_current_pdo_human_readable(HardwareSerial &serial); // Return the current set power delivery option
 
 protected:
     int status_log_readline_msg(char *buffer, int maxlen, status_log_t *log);

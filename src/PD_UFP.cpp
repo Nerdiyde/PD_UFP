@@ -14,7 +14,7 @@
     So far this library is mostly tested on a custom PCB containing an ESP32 and an FUSB302 PD phy.
 
     ============================================
-    
+
     MIT License
 
     Copyright (c) 2020 Ryan Ma
@@ -312,14 +312,14 @@ void PD_UFP_core_c::handle_FUSB302_event(FUSB302_event_t events)
 
 bool PD_UFP_core_c::timer(void)
 {
-    uint16_t t = clock_ms();
-    if (wait_src_cap && t - time_wait_src_cap > t_TypeCSinkWaitCap)
+    uint16_t timestamp = clock_ms();
+    if (wait_src_cap && timestamp - time_wait_src_cap > t_TypeCSinkWaitCap)
     {
-        time_wait_src_cap = t;
-        if (get_src_cap_retry_count < 3)
+        time_wait_src_cap = timestamp;
+        if (get_src_cap_retry_count < SRC_CAP_RETRY_COUNTER_MAX)
         {
-            uint16_t header;
-            get_src_cap_retry_count += 1;
+            uint16_t header = 0;
+            get_src_cap_retry_count++;
             /* Try to request soruce capabilities message (will not cause power cycle VBUS) */
             PD_protocol_create_get_src_cap(&protocol, &header);
             status_log_event(STATUS_LOG_MSG_TX);
@@ -335,17 +335,19 @@ bool PD_UFP_core_c::timer(void)
     }
     if (wait_ps_rdy)
     {
-        if (t - time_wait_ps_rdy > t_RequestToPSReady)
+        if (timestamp - time_wait_ps_rdy > t_RequestToPSReady)
         {
             wait_ps_rdy = 0;
             set_default_power();
         }
     }
-    else if (send_request || (status_power == STATUS_POWER_PPS && t - time_PPS_request > t_PPSRequest))
+    else if (send_request ||
+             (status_power == STATUS_POWER_PPS &&
+              timestamp - time_PPS_request > t_PPSRequest))
     {
         wait_ps_rdy = 1;
         send_request = 0;
-        time_PPS_request = t;
+        time_PPS_request = timestamp;
         uint16_t header;
         uint32_t obj[7];
         /* Send request if option updated or regularly in PPS mode to keep power alive */
@@ -354,9 +356,9 @@ bool PD_UFP_core_c::timer(void)
         time_wait_ps_rdy = clock_ms();
         FUSB302_tx_sop(&FUSB302, header, obj);
     }
-    if (t - time_polling > t_PD_POLLING)
+    if (timestamp - time_polling > t_PD_POLLING)
     {
-        time_polling = t;
+        time_polling = timestamp;
         return true;
     }
     return false;
@@ -385,6 +387,12 @@ void PD_UFP_core_c::delay_ms(uint16_t ms)
 uint16_t PD_UFP_core_c::clock_ms(void)
 {
     return (uint16_t)millis() * clock_prescaler;
+}
+
+// Return the current set power delivery option
+uint16_t PD_UFP_core_c::get_current_pdo(void)
+{
+    return this->protocol.power_option;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -644,5 +652,40 @@ void PD_UFP_log_c::print_status(HardwareSerial &serial)
         {
             serial.print(buf);
         }
+    }
+}
+
+// Return the current set power delivery option as human readable string
+void PD_UFP_log_c::print_current_pdo_human_readable(HardwareSerial &serial)
+{
+    switch (get_current_pdo())
+    {
+    case PD_power_option_t::PD_POWER_OPTION_MAX_5V:
+        serial.println("PD_POWER_OPTION_MAX_5V");
+        break;
+    case PD_power_option_t::PD_POWER_OPTION_MAX_9V:
+        serial.println("PD_POWER_OPTION_MAX_9V");
+        break;
+    case PD_power_option_t::PD_POWER_OPTION_MAX_12V:
+        serial.println("PD_POWER_OPTION_MAX_12V");
+        break;
+    case PD_power_option_t::PD_POWER_OPTION_MAX_15V:
+        serial.println("PD_POWER_OPTION_MAX_15V");
+        break;
+    case PD_power_option_t::PD_POWER_OPTION_MAX_20V:
+        serial.println("PD_POWER_OPTION_MAX_20V");
+        break;
+    case PD_power_option_t::PD_POWER_OPTION_MAX_VOLTAGE:
+        serial.println("PD_POWER_OPTION_MAX_VOLTAGE");
+        break;
+    case PD_power_option_t::PD_POWER_OPTION_MAX_CURRENT:
+        serial.println("PD_POWER_OPTION_MAX_CURRENT");
+        break;
+    case PD_power_option_t::PD_POWER_OPTION_MAX_POWER:
+        serial.println("PD_POWER_OPTION_MAX_POWER");
+        break;
+    default:
+        serial.println("Returned PDO id is not known.");
+        break;
     }
 }
