@@ -1,0 +1,30 @@
+# Syntax Highlighting For PD_UFP library
+
+#====================
+# Datatypes (KEYWORD1)
+
+pd_log_level_t	KEYWORD1
+status_log_t	KEYWORD1
+
+#====================
+# Methods and Functions (KEYWORD2)
+
+init	KEYWORD2
+init_PPS	KEYWORD2
+run	KEYWORD2
+is_power_ready	KEYWORD2
+is_PPS_ready	KEYWORD2
+is_ps_transition KEYWORD2
+get_voltage KEYWORD2
+get_current KEYWORD2
+set_PPS KEYWORD2
+set_power_option KEYWORD2
+clock_prescale_set KEYWORD2
+
+#====================
+# Instances (KEYWORD2)
+PD_UFP_core_c KEYWORD2
+
+
+#====================
+# Constants (LITERAL1)

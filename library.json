@@ -1,0 +1,21 @@
+{
+    "name": "PD_UFP",
+    "keywords": "Power Delivery, PD, PPS, USB-C, FUSB302",
+    "description": "A library to communicate with a connected USB-C Power delivery source.",
+    "authors":
+    {
+        "name": "Fabian Steppat",
+        "email": "info@nerdiy.de",
+        "url": "https://nerdiy.de",
+        "maintainer": "true"
+    },
+    "repository":
+    {
+        "type": "git",
+        "url": ""
+    },
+    "version": "0.0.1",
+    "frameworks": "*",
+    "platforms": "*",
+    "license": "MIT"
+}
